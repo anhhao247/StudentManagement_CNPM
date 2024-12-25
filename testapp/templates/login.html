@@ -1,0 +1,190 @@
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <!-- Đoạn mã này cần có trong layout hoặc trong trang hiện tại -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for category, message in messages %}
+            <li class="flash {{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+        <h2>Đăng nhập</h2>
+        <form method="post" action="{{ url_for('view_login') }}" ">
+            <label for="username"><b>Tên người dùng</b></label>
+            <input type="text" placeholder="Vui lòng nhập tài khoản" name="username" required>
+
+            <label for="password"><b>Mật khẩu</b></label>
+            <input type="password" placeholder="Mật khẩu" name="password" required>
+
+            <button type="submit">Đăng nhập</button>
+            <div class="options">
+                <label>
+                    <input type="checkbox" name="remember"> Ghi nhớ đăng nhập
+                </label>
+                <span class="forgot-password"></span>
+            </div>
+        </form>
+        <div class="register-link">
+            <p>Giáo viên quên mật khẩu vui lòng liên hệ người quản trị để được cấp lại mật khẩu!</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f7;
+      margin: 0;
+      padding: 0;
+    }
+
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-card {
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 15px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px 15px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .forgot-password a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .forgot-password a:hover {
+      text-decoration: underline;
+    }
+
+    .register-link {
+      margin-top: 20px;
+    }
+
+    .register-link a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+
+     .flashes {
+        list-style-type: none;
+        padding: 0;
+    }
+    .flash {
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    .flash.success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .flash.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block js %}
+ <script>
+     function login() {
+    var username = document.querySelector('[name="username"]').value;
+    var password = document.querySelector('[name="password"]').value;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/login", true);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            var response = JSON.parse(xhr.responseText);
+            if (xhr.status === 200 && response.success) {
+                // Thông báo đăng nhập thành công
+                Swal.fire(
+                    'Đăng nhập thành công!',
+                    'Chào mừng bạn đã đăng nhập vào hệ thống.',
+                    'success'
+                ).then(() => location.href = '/');  // Redirect đến trang chủ
+            } else {
+                // Thông báo lỗi đăng nhập
+                Swal.fire(
+                    'Lỗi đăng nhập!',
+                    response.error || 'Tên đăng nhập hoặc mật khẩu không chính xác.',
+                    'error'
+                );
+            }
+        }
+    };
+    xhr.send(JSON.stringify({ username: username, password: password }));
+}
+
+      // Ngăn người dùng quay lại trang trước đó bằng nút "Back"
+    if (window.history && window.history.pushState) {
+        window.history.pushState("forward", null, "./");
+        window.history.forward();
+    }
+
+    window.onpageshow = function (evt) {
+        if (evt.persisted) {
+            window.history.forward();
+        }
+    };
+
+
+ </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+

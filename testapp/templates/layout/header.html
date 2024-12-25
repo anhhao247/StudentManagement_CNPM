@@ -1,0 +1,38 @@
+<div class="sidebar open">
+    <div class="logo-details">
+        <div class="logo_name">Student Management</div>
+    </div>
+    <div class="nav-list">
+        {% if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN %}
+        <a href="#">User</a>
+        <a href="{{ url_for('view_class') }}">Class</a>
+        <a href="{{ url_for('view_teacher') }}">Teacher</a>
+        <a href="{{ url_for('view_student') }}">Học sinh</a>
+        <a href="{{ url_for('view_monhoc') }}">Môn học</a>
+        <a href="{{ url_for('nhapdiem') }}">Điểm</a>
+        <a href="#">Thống kê</a>
+        <a href="#">Tài khoản</a>
+        <div class="profile">
+            <div class="profile-details">
+                {% elif current_user.is_authenticated and current_user.user_role == UserRole.TEACHER %}
+                <a href="{{ url_for('nhapdiem') }}">Điểm</a>
+                {% elif current_user.is_authenticated and current_user.user_role == UserRole.STAFF %}
+                <a href="{{ url_for('view_class') }}">Class</a>
+                <a href="{{ url_for('view_teacher') }}">Teacher</a>
+                <a href="{{ url_for('view_student') }}">Học sinh</a>
+                <a href="{{ url_for('view_monhoc') }}">Môn học</a>
+                {% endif %}
+
+
+                {% if current_user.is_authenticated%}
+                <div class="name_job">
+                    <a href="{{ url_for('view_login') }}" id="{{ current_user.username }}">Hello {{ current_user.username }}! {{ current_user.user_role.name }}</a>
+                    <a href="{{ url_for('view_login') }}" id="log_out">Logout</a>
+                </div>
+                {% else %}
+            </div>
+            <a href="{{ url_for('view_login') }}" id="log_out">Login</a>
+        </div>
+        {% endif %}
+    </div>
+</div>

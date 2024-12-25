@@ -1,0 +1,84 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Student{% endblock %}
+
+{% block header %}<h1 class="center-header">Danh sách học sinh </h1>{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<div class="search-container">
+    <input type="text" id="search-input" class="custom-input" placeholder="Tìm kiếm môn học..." oninput="searchTable()">
+    <button onclick="showAddStudentModal()" class="action-button">Thêm học sinh</button>
+</div>
+
+<div class="table-wrapper">
+    <table class="fl-table" id="student-table">
+        <thead>
+        <tr>
+            <th>STT</th>
+            <th>Họ</th>
+            <th>Tên</th>
+            <th>Giới tính</th>
+            <th>Ngày sinh</th>
+            <th>Địa chỉ</th>
+            <th>SĐT</th>
+            <th>Email</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for s in students %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ s.ho }}</td>
+            <td>{{ s.ten }}</td>
+            <td>{{ s.sex }}</td>
+            <td>{{ s.DoB.strftime('%Y-%m-%d') }}</td>
+            <td>{{ s.address }}</td>
+            <td>{{ s.sdt }}</td>
+            <td>{{ s.email }}</td>
+            <td>
+                <i class="fa fa-edit"
+                   onclick="editStudent('{{ s.id }}', '{{ s.ho }}', '{{ s.ten }}', '{{ s.sex }}', '{{ s.DoB }}', '{{ s.address }}', '{{ s.sdt }}', '{{ s.email }}')"></i>
+                <i class="fa fa-trash" onclick="deleteStudent('{{ s.id }}')"></i>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div id="pagination" class="pagination-container"></div>
+<div id="no-results" style="display:none; text-align:center; color:red;">
+    Không tìm thấy kết quả phù hợp.
+</div>
+{% endblock %}
+
+{% block css %}
+<style>
+    .pagination-container {
+        margin: 20px 0;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .pagination-button {
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        background-color: #fff;
+        cursor: pointer;
+    }
+
+    .pagination-button.active {
+        background-color: #007bff;
+        color: #fff;
+        border-color: #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block js %}
+    <script src="{{ url_for('static', filename='js/student.js') }}"></script>
+{% endblock %}

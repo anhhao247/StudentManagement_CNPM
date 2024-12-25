@@ -1,0 +1,126 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Điểm{% endblock %}
+
+{% block header %}Bảng điểm học sinh{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Form chọn lớp và học kỳ -->
+    <form id="filterForm" class="row mb-4">
+        <div class="col-md-6">
+            <label for="lop" class="form-label">Chọn lớp</label>
+            <select class="form-select" id="lop" name="lop" required>
+                <option value="" selected disabled>Chọn lớp</option>
+                {% if danh_sach_lop %}
+                    {% for lop in danh_sach_lop %}
+                        <option value="{{ lop.id }}">{{ lop.name }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option>Không có lớp nào</option>
+                {% endif %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="hoc_ky" class="form-label">Chọn học kỳ</label>
+            <select class="form-select" id="hoc_ky" name="hoc_ky" required>
+                <option value="" selected disabled>Chọn học kỳ</option>
+                {% if danh_sach_hoc_ky %}
+                    {% for hoc_ky in danh_sach_hoc_ky %}
+                        <option value="{{ hoc_ky.id }}">{{ hoc_ky.name }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option>Không có học kỳ nào</option>
+                {% endif %}
+            </select>
+        </div>
+    </form>
+
+    <!-- Danh sách môn học -->
+    <div class="btn-group mb-4">
+        {% for mon_hoc in danh_sach_mon_hoc %}
+            <button type="button" class="btn btn-primary mon-hoc-btn" data-monhoc-id="{{ mon_hoc.id }}">
+                {{ mon_hoc.name }}
+            </button>
+        {% endfor %}
+    </div>
+
+    <!-- Bảng hiển thị điểm -->
+    <div id="diemTableContainer">
+        <h5 class="text-center">Vui lòng chọn lớp, học kỳ, và môn học để xem bảng điểm</h5>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterForm = document.getElementById('filterForm');
+        const diemTableContainer = document.getElementById('diemTableContainer');
+        const monHocButtons = document.querySelectorAll('.mon-hoc-btn');
+
+        monHocButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const lopId = document.getElementById('lop').value;
+                const hocKyId = document.getElementById('hoc_ky').value;
+                const monHocId = this.dataset.monhocId;
+
+                if (!lopId || !hocKyId) {
+                    alert('Vui lòng chọn lớp và học kỳ!');
+                    return;
+                }
+
+                // Dữ liệu giả lập: hiển thị bảng điểm (thay thế bằng truy vấn thực tế từ backend)
+                const fakeData = [
+                    { hoTen: 'Nguyen Van A', diem15p: 8, diem45p: 9, diemCK: 10 },
+                    { hoTen: 'Tran Thi B', diem15p: 7, diem45p: 8, diemCK: 9 },
+                    { hoTen: 'Le Van C', diem15p: 6, diem45p: 7, diemCK: 8 },
+                ];
+
+                // Render bảng điểm
+                renderDiemTable(fakeData, lopId, hocKyId, monHocId);
+            });
+        });
+
+        function renderDiemTable(data, lopId, hocKyId, monHocId) {
+            if (data.length === 0) {
+                diemTableContainer.innerHTML = '<h5 class="text-center text-danger">Không có dữ liệu bảng điểm.</h5>';
+                return;
+            }
+
+            let tableHTML = `
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Họ và Tên</th>
+                            <th>Điểm 15 phút</th>
+                            <th>Điểm 45 phút</th>
+                            <th>Điểm cuối kỳ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach((item, index) => {
+                tableHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.hoTen}</td>
+                        <td>${item.diem15p}</td>
+                        <td>${item.diem45p}</td>
+                        <td>${item.diemCK}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+
+            diemTableContainer.innerHTML = `
+                <h5 class="text-center">Bảng điểm lớp ID: ${lopId}, Học kỳ ID: ${hocKyId}, Môn học ID: ${monHocId}</h5>
+                ${tableHTML}
+            `;
+        }
+    });
+</script>
+{% endblock %}

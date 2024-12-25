@@ -1,0 +1,174 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Class{% endblock %}
+{% block header %}<h1 class="center-header">Danh sách lớp {{className}}</h1>{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
+
+<div id="class-list-container" class="container">
+    <input type="hidden" id="current-class-id" value="">
+    <!-- Bảng danh sách lớp -->
+ <div class="search-container">
+        <input type="text" id="search-input" placeholder="Tìm kiếm tên lớp..." oninput="searchTable()">
+        <select id="filter-grade" onchange="filterByGrade()">
+            <option value="">Chọn Khối</option>
+            {% for grade in grades %}
+                <option value="{{ grade.name }}">{{ grade.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <table class="fl-table" id="class-table">
+        <thead>
+            <tr>
+                <th>Tên lớp</th>
+                <th>Sĩ số</th>
+                <th>Khối lớp</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+           {% for c in classes %}
+<tr data-grade="{{ c.grade }}">
+    <td>{{ c.name }}</td>
+    <td>{{ c.siso }}</td>
+    <td>{{ c.grade }}</td>
+    <td>
+        <button onclick="showStudentList({{ c.id }}, '{{ c.name }}')" class="btn btn-primary">Hiển thị học sinh</button>
+    </td>
+</tr>
+{% endfor %}
+
+        </tbody>
+    </table>
+</div>
+
+<div id="student-list-container" class="container" style="display: none;">
+    <div class="d-flex justify-content-between mb-3">
+        <button onclick="goBackToClassList()" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Quay lại
+        </button>
+        <div class="d-flex justify-content-between mb-3">
+            <button onclick="showAddStudentModal()" class="btn btn-primary">
+                <i class="fa fa-plus"></i> Thêm học sinh
+            </button>
+        </div>
+        <button class="btn btn-secondary"><i class="fa fa-print"></i> Xuất danh sách</button>
+    </div>
+
+    <!-- Bảng danh sách học sinh -->
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>STT</th>
+            <th>Họ</th>
+            <th>Tên</th>
+            <th>Ngày sinh</th>
+            <th>Giới tính</th>
+            <th>Địa chỉ</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+        <tbody id="student-table-body">
+        <!-- Dữ liệu sẽ được thêm bởi JavaScript -->
+        </tbody>
+    </table>
+
+    <!-- Bộ chọn số lượng hiển thị -->
+    <div class="d-flex justify-content-end">
+        <label for="records-per-page">SL:</label>
+        <select id="records-per-page" class="form-control ml-2" style="width: 80px;">
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="40" selected>40</option>
+        </select>
+    </div>
+</div>
+
+<!-- Modal thêm học sinh -->
+<div id="add-student-modal" class="modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm học sinh vào lớp</h5>
+                <button type="button" class="btn-close" onclick="closeAddStudentModal()"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Chọn</th>
+                        <th>Họ</th>
+                        <th>Tên</th>
+                        <th>Ngày sinh</th>
+                        <th>Giới tính</th>
+                    </tr>
+                    </thead>
+                    <tbody id="available-student-list">
+                    <!-- Dữ liệu sẽ được thêm bởi JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddStudentModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="addSelectedStudents()">Thêm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block css %}
+<style>
+    .container {
+    margin-top: 20px;
+}
+
+.card {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.card img {
+    max-height: 150px;
+    object-fit: cover;
+}
+
+.student-list {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+    .container {
+    margin-top: 20px;
+}
+
+.card {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.card img {
+    max-height: 150px;
+    object-fit: cover;
+}
+
+.table {
+    margin-top: 20px;
+}
+
+
+</style>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/lop.js') }}"></script>
+{% endblock %}

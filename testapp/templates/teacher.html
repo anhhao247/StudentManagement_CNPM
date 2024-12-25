@@ -1,0 +1,21 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Teacher{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            {% for t in teachers %}
+            <div class="col-md-3">
+                <div class="card">
+                  <img class="card-img-top" src="{{ url_for('static', filename='images/instagram.jpg') }}" alt="Card image">
+                  <div class="card-body">
+                    <h4 class="card-title">{{ t.name }}</h4>
+                  </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}
