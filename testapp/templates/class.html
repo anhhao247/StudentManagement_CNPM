@@ -9,35 +9,37 @@
 <div id="class-list-container" class="container">
     <input type="hidden" id="current-class-id" value="">
     <!-- Bảng danh sách lớp -->
- <div class="search-container">
+    <div class="search-container">
         <input type="text" id="search-input" placeholder="Tìm kiếm tên lớp..." oninput="searchTable()">
         <select id="filter-grade" onchange="filterByGrade()">
             <option value="">Chọn Khối</option>
             {% for grade in grades %}
-                <option value="{{ grade.name }}">{{ grade.name }}</option>
+            <option value="{{ grade.name }}">{{ grade.name }}</option>
             {% endfor %}
         </select>
     </div>
     <table class="fl-table" id="class-table">
         <thead>
-            <tr>
-                <th>Tên lớp</th>
-                <th>Sĩ số</th>
-                <th>Khối lớp</th>
-                <th>Hành động</th>
-            </tr>
+        <tr>
+            <th>Tên lớp</th>
+            <th>Sĩ số</th>
+            <th>Khối lớp</th>
+            <th>Hành động</th>
+        </tr>
         </thead>
         <tbody>
-           {% for c in classes %}
-<tr data-grade="{{ c.grade }}">
-    <td>{{ c.name }}</td>
-    <td>{{ c.siso }}</td>
-    <td>{{ c.grade }}</td>
-    <td>
-        <button onclick="showStudentList({{ c.id }}, '{{ c.name }}')" class="btn btn-primary">Hiển thị học sinh</button>
-    </td>
-</tr>
-{% endfor %}
+        {% for c in classes %}
+        <tr data-grade="{{ c.grade }}">
+            <td>{{ c.name }}</td>
+            <td>{{ c.si_so }}</td>
+            <td>{{ c.grade }}</td>
+            <td>
+                <button onclick="showStudentList({{ c.id }}, '{{ c.name }}')" class="btn btn-primary">Hiển thị học
+                    sinh
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
 
         </tbody>
     </table>

@@ -249,12 +249,11 @@ def nhapdiem():
 def view_class():
     # user_id =
     # user = get_user_by_id(user_id)  # Lấy thông tin người dùng từ cơ sở dữ liệu
-
     # Lấy danh sách các khối
-    grades = dao.load_grade()  # Đây là nơi bạn cần chắc chắn rằng có danh sách khối từ dao
 
-    grade_id = request.args.get('grade_id')
-    classes = dao.load_class(grade_id)
+    # grade_id = request.args.get('grade_id')
+    grades = dao.load_grade()  # Đây là nơi bạn cần chắc chắn rằng có danh sách khối từ dao
+    classes = dao.load_class()
 
     return render_template('class.html', grades=grades, classes=classes)
 

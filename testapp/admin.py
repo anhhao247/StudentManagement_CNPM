@@ -25,7 +25,7 @@ class AuthenticatedView(ModelView):
 
 
 class LopView(AuthenticatedView):
-    form_columns = ['students' ,'name', 'si_so', 'khoi']
+    form_columns = ['students' ,'name', 'khoi']
     # column_list = ['name', 'si_so', 'khoi']
     # pass
 
@@ -62,6 +62,17 @@ class StudentView(AuthenticatedView):
     edit_modal = True
     column_filters = ['ten', 'lop']
     column_searchable_list = ['ten']
+
+    def on_model_change(self, form, model, is_created):
+        super().on_model_change(form, model, is_created)
+
+        # Cập nhật si_so khi thêm hoặc xóa học sinh khỏi lớp
+        if is_created:
+            model.si_so = len(model.students)  # Gán si_so là số học sinh trong lớp khi tạo mới
+        else:
+            model.si_so = len(model.students)  # Cập nhật lại si_so khi có sự thay đổi học sinh trong lớp
+
+        db.session.commit()  # Lưu thay đổi vào database
 
 class SemesterView(AuthenticatedView):
     pass

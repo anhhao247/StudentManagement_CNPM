@@ -197,6 +197,10 @@ def count_class_by_grade():
 def count_student_by_class():
     return db.session.query(Lop.id,Lop.name,func.count(lop_student.c.student_id)).join(lop_student, Lop.id == lop_student.c.lop_id, isouter=True).group_by(Lop.id).all()
 
+def count_student_by_class_id(lop_id):
+    siso = db.session.query(func.count(lop_student.c.student_id)).filter(lop_student.c.lop_id == lop_id).scalar()
+    return siso
+
 def get_semester_by_id(semester_id):
     return Semester.query.get(semester_id)
 
@@ -255,9 +259,7 @@ if __name__ == "__main__":
     from testapp import app
 
     with app.app_context():
-        average_scores1 = calculate_average_score(school_year_id=1, semester_id=1, subject_id=1)
-        for score in average_scores1:
-            print(score)
+        print(count_student_by_class_id(3))
 
 # def get_user_by_id(user_id):
 #     # Lấy thông tin người dùng từ cơ sở dữ liệu dựa trên user_id
