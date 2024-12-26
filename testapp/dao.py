@@ -6,6 +6,73 @@ from testapp.models import *
 def get_semester_by_schoolyear_id(schoolyear_id):
     return Semester.query.filter_by(school_year_id=schoolyear_id).all()
 
+def calculate_subject_avg(subject_marks):
+    """
+    Tính điểm trung bình cho một môn học dựa trên các loại điểm
+    """
+    weighted_avg = (
+        sum(subject_marks['15_phut']) * 1 +
+        sum(subject_marks['45_phut']) * 2 +
+        sum(subject_marks['cuoi_ky']) * 3
+    )
+    total_weight = (
+        len(subject_marks['15_phut']) * 1 +
+        len(subject_marks['45_phut']) * 2 +
+        len(subject_marks['cuoi_ky']) * 3
+    )
+    return weighted_avg / total_weight if total_weight > 0 else 0
+
+def get_marks_by_subject(student_id, semester_id):
+    """
+    Lấy điểm cho từng môn học của học sinh trong một học kỳ
+    """
+    marks = Mark.query.filter_by(student_id=student_id, semester_id=semester_id).all()
+    subjects = {}
+
+    for m in marks:
+        subject = m.subject_id
+        if subject not in subjects:
+            subjects[subject] = {'15_phut': [], '45_phut': [], 'cuoi_ky': []}
+        if m.type == DiemType.DIEM_15PHUT:
+            subjects[subject]['15_phut'].append(m.value)
+        elif m.type == DiemType.DIEM_45PHUT:
+            subjects[subject]['45_phut'].append(m.value)
+        elif m.type == DiemType.DIEM_CUOIKY:
+            subjects[subject]['cuoi_ky'].append(m.value)
+
+    return subjects
+
+def calculate_avg_for_semester(student_id, semester_id):
+    """
+    Tính điểm trung bình cho từng học kỳ của học sinh
+    """
+    subjects = get_marks_by_subject(student_id, semester_id)
+    avg_list = [calculate_subject_avg(marks) for subject, marks in subjects.items()]
+    return sum(avg_list) / len(avg_list) if avg_list else 0
+
+def calculate_avg_for_year(student_id, semesters):
+    """
+    Tính điểm trung bình năm học dựa trên các học kỳ
+    """
+    hk1_avg = 0
+    hk2_avg = 0
+
+    for semester in semesters:
+        if semester.semester_type == 'Học kỳ 1':
+            hk1_avg = calculate_avg_for_semester(student_id, semester.id)
+        elif semester.semester_type == 'Học kỳ 2':
+            hk2_avg = calculate_avg_for_semester(student_id, semester.id)
+
+    hk1_avg_rounded = round(hk1_avg, 1)
+    hk2_avg_rounded = round(hk2_avg, 1)
+    total_avg = (hk2_avg * 2 + hk1_avg) / 3 if hk1_avg or hk2_avg else 0
+    total_avg_rounded = round(total_avg, 1)
+
+    return {
+        'hk1_avg': hk1_avg_rounded,
+        'hk2_avg': hk2_avg_rounded,
+        'total_avg': total_avg_rounded
+    }
 # load khoi
 def load_grade():
     return Khoi.query.all()

@@ -5,7 +5,7 @@ from flask_login import login_user
 from testapp import app, dao, login
 from flask import request, render_template, session, redirect, url_for, flash,  logging, abort
 from flask_login import login_user, logout_user, login_required
-from testapp.dao import get_user_by_id, xoa_hocsinh
+from testapp.dao import get_user_by_id, xoa_hocsinh, calculate_avg_for_year
 from testapp.models import  User, lop_student, UserRole
 import pandas as pd
 from sqlalchemy.exc import IntegrityError
@@ -233,7 +233,6 @@ def nhapdiem():
 @login_required
 @admin_or_required(role=UserRole.TEACHER)
 def xuatdiem():
-    # Lấy thông tin các lớp và năm học
     lops = Lop.query.all()
     namhoc = SchoolYear.query.all()
 
@@ -244,76 +243,19 @@ def xuatdiem():
     student_marks = {}
 
     if selected_year_id and selected_class_id:
-        # Lấy học kỳ tương ứng với năm học đã chọn
         semesters = Semester.query.filter_by(school_year_id=selected_year_id).all()
         selected_class = Lop.query.filter_by(id=selected_class_id).first()
-        # In thông tin học kỳ và lớp
-        print(f"Học kỳ cho năm học {selected_year_id}: {semesters}")
-        print(f"Lớp đã chọn: {selected_class}")
 
         if selected_class and semesters:
-            # Lấy học sinh trong lớp đã chọn
             students_in_lop = selected_class.students
 
             for student in students_in_lop:
+                avg_data = calculate_avg_for_year(student.id, semesters)
                 student_marks[student.id] = {
                     'name': student.ho + " " + student.ten,
                     'class': selected_class.name,
-                    'hk1_avg': 0,
-                    'hk2_avg': 0,
-                    'total_avg': 0
+                    **avg_data
                 }
-
-                # Tạo danh sách điểm cho từng học kỳ
-                hk1_subjects = {}
-                hk2_subjects = {}
-
-                for semester in semesters:
-                    print(f"Checking semester type for semester {semester.id}: {semester.semester_type}")
-                    marks = Mark.query.filter_by(student_id=student.id, semester_id=semester.id).all()
-                    print(f"Marks for student {student.ho} {student.ten} in semester {semester.id}: {marks}")
-
-                    # Lọc điểm theo từng loại điểm cho từng học kỳ và môn học
-                    for m in marks:
-                        subject = m.subject_id
-                        if semester.semester_type == 'Học kỳ 1':
-                            if subject not in hk1_subjects:
-                                hk1_subjects[subject] = {'15_phut': [], '45_phut': [], 'cuoi_ky': []}
-                            if m.type == DiemType.DIEM_15PHUT:
-                                hk1_subjects[subject]['15_phut'].append(m.value)
-                            elif m.type == DiemType.DIEM_45PHUT:
-                                hk1_subjects[subject]['45_phut'].append(m.value)
-                            elif m.type == DiemType.DIEM_CUOIKY:
-                                hk1_subjects[subject]['cuoi_ky'].append(m.value)
-                        elif semester.semester_type == 'Học kỳ 2':
-                            if subject not in hk2_subjects:
-                                hk2_subjects[subject] = {'15_phut': [], '45_phut': [], 'cuoi_ky': []}
-                            if m.type == DiemType.DIEM_15PHUT:
-                                hk2_subjects[subject]['15_phut'].append(m.value)
-                            elif m.type == DiemType.DIEM_45PHUT:
-                                hk2_subjects[subject]['45_phut'].append(m.value)
-                            elif m.type == DiemType.DIEM_CUOIKY:
-                                hk2_subjects[subject]['cuoi_ky'].append(m.value)
-
-                # Tính điểm trung bình theo từng môn học cho từng học kỳ
-                def calculate_subject_avg(subject_marks):
-                    weighted_avg = sum(subject_marks['15_phut']) * 1 + sum(subject_marks['45_phut']) * 2 + sum(subject_marks['cuoi_ky']) * 3
-                    total_weight = len(subject_marks['15_phut']) * 1 + len(subject_marks['45_phut']) * 2 + len(subject_marks['cuoi_ky']) * 3
-                    return weighted_avg / total_weight if total_weight > 0 else 0
-
-                hk1_avg_list = [calculate_subject_avg(marks) for subject, marks in hk1_subjects.items()]
-                hk2_avg_list = [calculate_subject_avg(marks) for subject, marks in hk2_subjects.items()]
-
-                hk1_avg = sum(hk1_avg_list) / len(hk1_avg_list) if hk1_avg_list else 0
-                hk2_avg = sum(hk2_avg_list) / len(hk2_avg_list) if hk2_avg_list else 0
-                total_avg = (hk2_avg * 2 + hk1_avg) / 3 if (hk1_avg_list or hk2_avg_list) else 0
-
-                # Cập nhật điểm trung bình cho học sinh
-                student_marks[student.id].update({
-                    'hk1_avg': hk1_avg,
-                    'hk2_avg': hk2_avg,
-                    'total_avg': total_avg
-                })
 
     return render_template('xuatdiem.html',
                            lops=lops,
