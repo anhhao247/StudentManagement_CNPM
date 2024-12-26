@@ -32,7 +32,7 @@
     <div class="logo-details">
         <div class="logo_name">Student Management</div>
     </div>
-    {% if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN %}
+        {% if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN %}
     <div class="nav-list">
         <a href="#">User</a>
         <a href="{{ url_for('view_class') }}">Class</a>
@@ -43,27 +43,26 @@
         <a href="#">Thống kê</a>
         <a href="#">Tài khoản</a>
         {% elif current_user.is_authenticated and current_user.user_role == UserRole.TEACHER %}
-        <div class="profile">
-            <div class="profile-details">
-
-                <a href="{{ url_for('nhapdiem') }}">Điểm</a>
-                {% elif current_user.is_authenticated and current_user.user_role == UserRole.STAFF %}
-                <a href="{{ url_for('view_class') }}">Class</a>
-                <a href="{{ url_for('view_student') }}">Học sinh</a>
-                {% endif %}
-
-
-                {% if current_user.is_authenticated%}
-                <div class="name_job">
-                    <a href="{{ url_for('view_login') }}" id="{{ current_user.username }}">Hello {{
-                        current_user.username }}! {{ current_user.user_role.name }}</a>
-                    <a href="{{ url_for('view_login') }}" id="log_out">Logout</a>
-                </div>
-                {% else %}
-            </div>
-            <a href="{{ url_for('view_login') }}" id="log_out">Login</a>
+        <a href="{{ url_for('nhapdiem') }}">Điểm</a>
+        {% elif current_user.is_authenticated and current_user.user_role == UserRole.STAFF %}
+        <a href="{{ url_for('view_class') }}">Class</a>
+        <a href="{{ url_for('view_student') }}">Học sinh</a>
         </div>
         {% endif %}
+
+        <div class="profile">
+            <div class="profile-details">
+            {% if current_user.is_authenticated%}
+                <a href="#">Hello  {{ current_user.username }} </a>
+                <a href="{{ url_for('logout') }}">Đăng xuất</a>
+            {% else %}
+                <a href="{{ url_for('view_login') }}" id="log_out">Đăng nhập</a>
+            {% endif %}
+            </div>
+            <div class="name_job">
+
+            </div>
+        </div>
     </div>
 </div>
 

@@ -7,7 +7,8 @@
 <div class="content">
 <!-- Form chọn lớp -->
 <form method="POST" action="{{ url_for('nhapdiem') }}">
-    <div class="form-group">
+    <div class="form-row">
+    <div class="form-group col-md-3">
         <label for="lop">Chọn lớp:</label>
         <select class="form-control" id="lop" name="lop_id" required>
             {% for lop in lops %}
@@ -17,7 +18,17 @@
             {% endfor %}
         </select>
     </div>
-    <button type="submit" class="btn btn-primary" name="view_lop">Xem danh sách lớp</button>
+    <div class="form-group col-md-3">
+            <label for="schoolYear">Năm học</label>
+            <select id="schoolYear" class="form-control" name="school_year_id">
+                <option value="">Chọn năm học</option>
+                {% for i in namhoc %}
+                <option value="{{ i.id }}">{{ i.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    <button type="submit" class="btn btn-primary col-md-1" name="view_lop">Xem danh sách lớp</button>
+    </div>
 </form>
 
 {% if selected_lop %}
@@ -27,17 +38,11 @@
     <input type="hidden" name="lop_id" value="{{ selected_lop.id }}">
 
     <div class="form-row">
-        <div class="form-group col-md-3">
-            <label for="schoolYear">Năm học</label>
-            <select id="schoolYear" class="form-control" name="school_year_id">
-                {% for i in namhoc %}
-                <option value="{{ i.id }}">{{ i.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
+
         <div class="form-group col-md-3">
             <label for="semester">Học kỳ</label>
             <select id="semester" class="form-control" name="semester_id">
+                <option value="">Chọn học kỳ</option>
                 {% for i in hk %}
                 <option value="{{ i.id }}">{{ i.semester_type }}</option>
                 {% endfor %}
@@ -46,6 +51,7 @@
         <div class="form-group col-md-3">
             <label for="subject">Môn học</label>
             <select id="subject" class="form-control" name="subject_id">
+                <option value="">Chọn Môn học</option>
                 {% for i in mh %}
                 <option value="{{ i.id }}">{{ i.name }}</option>
                 {% endfor %}
@@ -54,6 +60,7 @@
         <div class="form-group col-md-3">
             <label for="examType">Loại điểm</label>
             <select id="examType" class="form-control" name="examType">
+                <option value="">Chọn loại điểm</option>
                 {% for i in diem_types %}
                 <option value="{{ i.name }}">{{ i.value }}</option>
                 {% endfor %}

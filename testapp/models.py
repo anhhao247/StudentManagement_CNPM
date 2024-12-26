@@ -76,6 +76,7 @@ class Semester(db.Model):
     #     return f'{self.name} - {self.school_year.name}'
 
 
+
 class Student(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     ho = Column(String(50), nullable=False)

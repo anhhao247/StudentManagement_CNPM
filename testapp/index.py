@@ -97,7 +97,7 @@ def nhapdiem():
 
     if request.method == 'POST':
         selected_lop = Lop.query.filter(Lop.id == request.form['lop_id']).first()
-
+        namhoc = SchoolYear.query.filter(SchoolYear.id == request.form['school_year_id']).first()
         if 'view_lop' in request.form:
             if selected_lop:
                 students_in_lop = selected_lop.students
