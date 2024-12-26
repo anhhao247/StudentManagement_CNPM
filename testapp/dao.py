@@ -3,6 +3,8 @@ from sqlalchemy.exc import NoResultFound
 
 from testapp.models import *
 
+def get_semester_by_schoolyear_id(schoolyear_id):
+    return Semester.query.filter_by(school_year_id=schoolyear_id).all()
 
 # load khoi
 def load_grade():
@@ -254,13 +256,21 @@ def calculate_average_score(school_year_id, semester_id, subject_id):
     ]
     return average_scores
 
+def test():
+    s = Student.query.get(1)
+    if s.lop:  # Nếu học sinh có lớp
+        # Lấy lớp của học sinh (nếu có nhiều lớp, chúng ta cần xử lý)
+        for lop in s.lop:  # Sử dụng mối quan hệ nhiều-nhiều
+            return lop.si_so
+    else:
+        return "Học sinh chưa có lớp"
 
 if __name__ == "__main__":
     from testapp import app
 
     with app.app_context():
-        print(count_student_by_class_id(3))
-
+        print(test())
+        # test()
 # def get_user_by_id(user_id):
 #     # Lấy thông tin người dùng từ cơ sở dữ liệu dựa trên user_id
 #     user = User.query.get(user_id)  # Truy vấn cơ sở dữ liệu với user_id

@@ -53,6 +53,7 @@ class TeacherView(AuthenticatedView):
             model.password = str(hashlib.md5(form.password.data.encode('utf-8')).hexdigest())
         super().on_model_change(form, model, is_created)
 
+
 class StudentView(AuthenticatedView):
     column_list = ['ho', 'ten', 'sex', 'DoB', 'address', 'sdt', 'email', 'lop']
     column_details_list = ['ho', 'ten', 'sex', 'DoB', 'address', 'sdt', 'email', 'lop']
@@ -64,15 +65,42 @@ class StudentView(AuthenticatedView):
     column_searchable_list = ['ten']
 
     def on_model_change(self, form, model, is_created):
+        if not is_created:  # Trường hợp cập nhật học sinh
+            # Lưu danh sách lớp cũ trước khi có bất kỳ thay đổi nào
+            old_lops = set(model.lop)  # Chuyển sang set để so sánh dễ dàng hơn
+            new_lops = set(form.lop.data)
+
+            # Tìm các lớp bị xóa và các lớp được thêm mới
+            removed_lops = old_lops - new_lops
+            added_lops = new_lops - old_lops
+
+            # Cập nhật sĩ số
+            for lop in removed_lops:
+                lop.si_so = max(0, lop.si_so - 1)
+                db.session.add(lop)
+
+            for lop in added_lops:
+                lop.si_so += 1
+                db.session.add(lop)
+
+        else:  # Trường hợp thêm mới học sinh
+            if model.lop:
+                for lop in model.lop:
+                    lop.si_so += 1
+                    db.session.add(lop)
+
+        # Gọi super để cập nhật model
         super().on_model_change(form, model, is_created)
 
-        # Cập nhật si_so khi thêm hoặc xóa học sinh khỏi lớp
-        if is_created:
-            model.si_so = len(model.students)  # Gán si_so là số học sinh trong lớp khi tạo mới
-        else:
-            model.si_so = len(model.students)  # Cập nhật lại si_so khi có sự thay đổi học sinh trong lớp
+        # Commit tất cả các thay đổi
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            raise e
 
-        db.session.commit()  # Lưu thay đổi vào database
+
+
 
 class SemesterView(AuthenticatedView):
     pass
@@ -108,3 +136,4 @@ admin.add_view(SemesterView(Semester, db.session, name='Học kỳ'))
 admin.add_view(SchoolYearView(SchoolYear, db.session, name='Năm học'))
 admin.add_view(StatsView(name='Thống kê'))
 admin.add_view(LogoutView(name='Logout'))
+

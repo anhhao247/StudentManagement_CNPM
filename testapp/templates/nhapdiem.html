@@ -4,161 +4,176 @@
 
 
 {% block content %}
-<div class="content">
-<!-- Form chọn lớp -->
-<form method="POST" action="{{ url_for('nhapdiem') }}">
-    <div class="form-row">
-    <div class="form-group col-md-3">
-        <label for="lop">Chọn lớp:</label>
-        <select class="form-control" id="lop" name="lop_id" required>
-            {% for lop in lops %}
-            <option value="{{ lop.id }}" {% if selected_lop and lop.id== selected_lop.id %}selected{% endif %}>
-                {{ lop.name }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group col-md-3">
-            <label for="schoolYear">Năm học</label>
-            <select id="schoolYear" class="form-control" name="school_year_id">
-                <option value="">Chọn năm học</option>
-                {% for i in namhoc %}
-                <option value="{{ i.id }}">{{ i.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    <button type="submit" class="btn btn-primary col-md-1" name="view_lop">Xem danh sách lớp</button>
-    </div>
-</form>
-
-{% if selected_lop %}
-
-<h3 class="mt-4">Danh sách học sinh của lớp {{ selected_lop.name }}</h3>
-<form method="POST" action="{{ url_for('nhapdiem') }}">
-    <input type="hidden" name="lop_id" value="{{ selected_lop.id }}">
-
-    <div class="form-row">
-
-        <div class="form-group col-md-3">
-            <label for="semester">Học kỳ</label>
-            <select id="semester" class="form-control" name="semester_id">
-                <option value="">Chọn học kỳ</option>
-                {% for i in hk %}
-                <option value="{{ i.id }}">{{ i.semester_type }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="subject">Môn học</label>
-            <select id="subject" class="form-control" name="subject_id">
-                <option value="">Chọn Môn học</option>
-                {% for i in mh %}
-                <option value="{{ i.id }}">{{ i.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group col-md-3">
-            <label for="examType">Loại điểm</label>
-            <select id="examType" class="form-control" name="examType">
-                <option value="">Chọn loại điểm</option>
-                {% for i in diem_types %}
-                <option value="{{ i.name }}">{{ i.value }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-
-    <table class="table table-bordered table-hover">
-        <thead class="thead-light">
-        <tr>
-            <th>STT</th>
-            <th>Tên học sinh</th>
-            <th>Giới tính</th>
-            <th>Điểm</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% if students_in_lop %}
-        {% for student in students_in_lop %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ student.ho }} {{ student.ten }}</td>
-            <td>{{ student.sex }}</td>
-            <td>
-                <input type="number" name="mark_{{ student.id }}" step="0.1" class="form-control"
-                       placeholder="Nhập điểm">
-            </td>
-
-        </tr>
-        {% endfor %}
-        {% else %}
-        <tr>
-            <td colspan="4" class="text-center">Chưa có học sinh trong lớp này</td>
-        </tr>
-        {% endif %}
-        </tbody>
-    </table>
-
-    <button type="submit" class="btn btn-primary" name="nhap_diem">Nhập điểm</button>
-    <button type="submit" class="btn btn-primary" name="sua_diem">Sửa điểm</button>
-    <button type="submit" class="btn btn-primary" name="xoa_diem">Xoá điểm</button>
-    <button type="submit" class="btn btn-primary" name="xem_diem">Xem điểm</button>
-</form>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<ul class="flashes">
+    {% for category, message in messages %}
+    <li class="flash {{ category }}">{{ message }}</li>
+    {% endfor %}
+</ul>
 {% endif %}
-<div class="container mt-5">
-    <h2 class="text-center">Bảng Điểm Học Sinh</h2>
-
-    <table class="table table-bordered table-hover mt-4">
-        <thead class="thead-light">
-        <tr>
-            <th>STT</th>
-            <th>Họ và Tên</th>
-            <th>Ngày Sinh</th>
-            <th>Điểm 15p</th>
-            <th>Điểm 1 Tiết</th>
-            <th>Điểm Cuối Kỳ</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- Dữ liệu học sinh và điểm sẽ được điền vào đây -->
-        {% for s in students_in_lop %}
-        <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ s.ho }} {{ s.ten }}</td>
-            <td>{{ s.DoB }}</td>
-
-            <!-- Duyệt qua danh sách điểm đã lọc -->
-            <td>
-                {% if s.id in student_marks %}
-                {% for diem in student_marks[s.id]["DIEM_15PHUT"] %}
-                {{ diem }}
-                {% endfor %}
-                {% else %}
-                {% endif %}
-            </td>
-            <td>
-                {% if s.id in student_marks %}
-                {% for diem in student_marks[s.id]["DIEM_45PHUT"] %}
-                {{ diem }}
-                {% endfor %}
-                {% else %}
-                {% endif %}
-            </td>
-            <td>
-                {% if s.id in student_marks %}
-                    {% for diem in student_marks[s.id]["DIEM_CUOIKY"] %}
-                        {{ diem }}
+{% endwith %}
+<div class="content">
+    <!-- Form chọn lớp -->
+    <form method="POST" action="{{ url_for('nhapdiem') }}">
+        <div class="form-row">
+            <div class="form-group col-md-3">
+                <label for="lop">Chọn lớp:</label>
+                <select class="form-control" id="lop" name="lop_id" required>
+                    <option value="">Chọn lớp</option>
+                    {% for lop in lops %}
+                    <option value="{{ lop.id }}" {% if selected_lop and lop.id== selected_lop.id %}selected{% endif %}>
+                        {{ lop.name }}
+                    </option>
                     {% endfor %}
-                {% else %}
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="schoolYear">Năm học</label>
+                <select id="schoolYear" class="form-control" name="namhoc_id" required>
+                    <option value="">Chọn năm học</option>
+                    {% for i in namhoc %}
+                    <option value="{{ i.id }}" {% if selected_school_year and i.id== selected_school_year.id
+                            %}selected{% endif %}>
+                        {{ i.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary col-md-1" name="view_lop">Xem danh sách lớp</button>
+        </div>
+    </form>
+
+    {% if selected_lop and  selected_school_year%}
+
+    <h3 class="mt-4">Danh sách học sinh của lớp {{ selected_lop.name }}</h3>
+    <form method="POST" action="{{ url_for('nhapdiem') }}">
+        <input type="hidden" name="lop_id" value="{{ selected_lop.id }}">
+        <input type="hidden" name="namhoc_id" value="{{ selected_school_year.id }}">
+        <div class="form-row">
+
+            <div class="form-group col-md-3">
+                <label for="semester">Học kỳ</label>
+                <select id="semester" class="form-control" name="semester_id" required>
+                    <option value="">Chọn học kỳ</option>
+                    {% for i in hk %}
+                    <option value="{{ i.id }}">
+                        {{ i.semester_type }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="subject">Môn học</label>
+                <select id="subject" class="form-control" name="subject_id">
+                    <option value="">Chọn Môn học</option>
+                    {% for i in mh %}
+                    <option value="{{ i.id }}">{{ i.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group col-md-3">
+                <label for="examType">Loại điểm</label>
+                <select id="examType" class="form-control" name="examType">
+                    <option value="">Chọn loại điểm</option>
+                    {% for i in diem_types %}
+                    <option value="{{ i.name }}">{{ i.value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-hover">
+            <thead class="thead-light">
+            <tr>
+                <th>STT</th>
+                <th>Tên học sinh</th>
+                <th>Giới tính</th>
+                <th>Điểm</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if students_in_lop %}
+            {% for student in students_in_lop %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ student.ho }} {{ student.ten }}</td>
+                <td>{{ student.sex }}</td>
+                <td>
+                    <input type="number" name="mark_{{ student.id }}" step="0.1" class="form-control"
+                           placeholder="Nhập điểm">
+                </td>
+
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-center">Chưa có học sinh trong lớp này</td>
+            </tr>
+            {% endif %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-primary" name="nhap_diem">Nhập điểm</button>
+        <button type="submit" class="btn btn-primary" name="sua_diem">Sửa điểm</button>
+        <button type="submit" class="btn btn-primary" name="xoa_diem">Xoá điểm</button>
+        <button type="submit" class="btn btn-primary" name="xem_diem">Xem điểm</button>
+    </form>
+    {% endif %}
+    <div class="container mt-5">
+        <h2 class="text-center">Bảng Điểm Học Sinh</h2>
+
+        <table class="table table-bordered table-hover mt-4">
+            <thead class="thead-light">
+            <tr>
+                <th>STT</th>
+                <th>Họ và Tên</th>
+                <th>Ngày Sinh</th>
+                <th>Điểm 15p</th>
+                <th>Điểm 1 Tiết</th>
+                <th>Điểm Cuối Kỳ</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Dữ liệu học sinh và điểm sẽ được điền vào đây -->
+            {% for s in students_in_lop %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ s.ho }} {{ s.ten }}</td>
+                <td>{{ s.DoB }}</td>
+
+                <!-- Duyệt qua danh sách điểm đã lọc -->
+                <td>
+                    {% if s.id in student_marks %}
+                    {% for diem in student_marks[s.id]["DIEM_15PHUT"] %}
+                    {{ diem }}
+                    {% endfor %}
+                    {% else %}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if s.id in student_marks %}
+                    {% for diem in student_marks[s.id]["DIEM_45PHUT"] %}
+                    {{ diem }}
+                    {% endfor %}
+                    {% else %}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if s.id in student_marks %}
+                    {% for diem in student_marks[s.id]["DIEM_CUOIKY"] %}
+                    {{ diem }}
+                    {% endfor %}
+                    {% else %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
-    </div>
-
-    </div>
+</div>
 {% endblock %}

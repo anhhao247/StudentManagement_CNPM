@@ -85,22 +85,23 @@ def nhapdiem():
     lops = Lop.query.all()
     selected_lop = None
     students_in_lop = []
-    hk = Semester.query.all()
+    hk = []
     mh = Subject.query.all()
     namhoc = SchoolYear.query.all()
     khois = Khoi.query.all()
     diem_types = [diem for diem in DiemType]
     student_marks = {}
     marks_by_student = {}
-    # Truy vấn điểm của học sinh trong lớp và môn học cho kỳ học đã chọn
     marks = {}
+    selected_school_year = None
 
     if request.method == 'POST':
         selected_lop = Lop.query.filter(Lop.id == request.form['lop_id']).first()
-        namhoc = SchoolYear.query.filter(SchoolYear.id == request.form['school_year_id']).first()
+        selected_school_year = SchoolYear.query.filter(SchoolYear.id == request.form['namhoc_id']).first()
         if 'view_lop' in request.form:
-            if selected_lop:
+            if selected_lop and selected_school_year:
                 students_in_lop = selected_lop.students
+                hk = selected_school_year.semesters
 
         if 'nhap_diem' in request.form:
             exam_type = request.form.get('examType')
@@ -133,24 +134,7 @@ def nhapdiem():
                     db.session.rollback()
                     flash(f'Có lỗi xảy ra khi lưu điểm: {str(e)}', 'danger')
 
-                    # Sau khi lưu điểm, lấy tất cả điểm của lớp
-                    for student in students_in_lop:
-                        marks = Mark.query.filter_by(
-                            student_id=student.id,
-                            subject_id=subject_id,
-                            semester_id=semester_id
-                        ).all()
 
-                        student_marks[student.id] = {
-                            DiemType.DIEM_15PHUT.name: [m.value for m in marks if m.type == DiemType.DIEM_15PHUT],
-                            DiemType.DIEM_45PHUT.name: [m.value for m in marks if m.type == DiemType.DIEM_45PHUT],
-                            DiemType.DIEM_CUOIKY.name: [m.value for m in marks if m.type == DiemType.DIEM_CUOIKY]
-                        }
-
-                    flash('Điểm đã được lưu thành công!', 'success')
-                except Exception as e:
-                    db.session.rollback()
-                    flash(f'Có lỗi xảy ra khi lưu điểm: {str(e)}', 'danger')
 
         if 'sua_diem' in request.form:
             exam_type = request.form.get('examType')
@@ -206,11 +190,10 @@ def nhapdiem():
                             db.session.commit()
 
         if 'xem_diem' in request.form:
-            exam_type = request.form.get('examType')
             subject_id = request.form.get('subject_id')
             semester_id = request.form.get('semester_id')
 
-            if not all([exam_type, subject_id, semester_id]):
+            if not all([subject_id, semester_id]):
                 flash('Vui lòng chọn đầy đủ thông tin trước khi lưu điểm!', 'danger')
             else:
                 # Lấy danh sách học sinh của lớp đã chọn
@@ -242,7 +225,8 @@ def nhapdiem():
                            diem_types=diem_types,
                            marks=marks,
                            marks_by_student=marks_by_student,
-                           student_marks=student_marks)
+                           student_marks=student_marks,
+                           selected_school_year=selected_school_year)
 
 #xuất điểm
 @app.route('/xuat-diem', methods=['GET', 'POST'])
