@@ -302,7 +302,7 @@ function deleteStudent(studentId) {
 }
  //Phaan trang
 let currentPage = 1; // Trang hiện tại
-const perPage = 2;  // Số lượng học sinh mỗi trang
+const perPage = 15;  // Số lượng học sinh mỗi trang
 
 function loadStudents(page = 1) {
     fetch(`/students?page=${page}&per_page=${perPage}`)

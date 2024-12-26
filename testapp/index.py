@@ -444,10 +444,10 @@ def view_teacher():
 @app.route("/student")
 @login_required
 def view_student():
-    user_id = session['user_id']
-    user = get_user_by_id(user_id)  # Lấy thông tin người dùng từ cơ sở dữ liệu
+    # user_id = session['user_id']
+    # user = get_user_by_id(user_id)  # Lấy thông tin người dùng từ cơ sở dữ liệu
     students = dao.load_student()
-    return render_template('student.html', students=students, user=user)
+    return render_template('student.html', students=students)
 # Phân trang
 @app.route('/students', methods=['GET'])
 @login_required

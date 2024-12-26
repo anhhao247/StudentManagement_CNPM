@@ -32,46 +32,40 @@
     <div class="logo-details">
         <div class="logo_name">Student Management</div>
     </div>
-        {% if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN %}
     <div class="nav-list">
-        <a href="#">User</a>
+        {% if current_user.is_authenticated and current_user.user_role == UserRole.ADMIN %}
         <a href="{{ url_for('view_class') }}">Class</a>
-        <a href="{{ url_for('view_teacher') }}">Teacher</a>
         <a href="{{ url_for('view_student') }}">Học sinh</a>
         <a href="{{ url_for('view_monhoc') }}">Môn học</a>
         <a href="{{ url_for('nhapdiem') }}">Điểm</a>
-         <a href="{{ url_for('xuatdiem') }}">Xuất điểm</a>
-        <a href="#">Thống kê</a>
-
-        {% elif current_user.is_authenticated and current_user.user_role == UserRole.TEACHER %}
+        <a href="{{ url_for('xuatdiem') }}">Xuất điểm</a>
+        {% elif current_user.user_role == UserRole.TEACHER %}
         <a href="{{ url_for('nhapdiem') }}">Điểm</a>
         <a href="{{ url_for('xuatdiem') }}">Xuất điểm</a>
-        {% elif current_user.is_authenticated and current_user.user_role == UserRole.STAFF %}
+        {% elif current_user.user_role == UserRole.STAFF %}
         <a href="{{ url_for('view_class') }}">Class</a>
         <a href="{{ url_for('view_student') }}">Học sinh</a>
-        </div>
-        {% endif %}
-
-        <div class="profile">
-            <div class="profile-details">
-            {% if current_user.is_authenticated%}
-                <a href="#">Hello  {{ current_user.username }} </a>
-                <a href="{{ url_for('logout') }}">Đăng xuất</a>
-            {% else %}
-                <a href="{{ url_for('view_login') }}" id="log_out">Đăng nhập</a>
-            {% endif %}
-            </div>
-            <div class="name_job">
-
-            </div>
-        </div>
+    {% endif %}
     </div>
+    <div class="profile">
+        <div class="profile-details">
+            {% if current_user.is_authenticated %}
+            <a href="#">Hello {{ current_user.username }} </a>
+            <a href="{{ url_for('logout') }}">Đăng xuất</a>
+            {% else %}
+            <a href="{{ url_for('view_login') }}" id="log_out">Đăng nhập</a>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
 </div>
 
 <div class="content">
-                {% block header %} {% endblock %}
-        {% block content %} {% endblock %}
-    </div>
+    {% block header %} {% endblock %}
+    {% block content %} {% endblock %}
+</div>
 
 </body>
 

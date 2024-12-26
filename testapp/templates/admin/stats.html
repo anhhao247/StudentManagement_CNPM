@@ -2,27 +2,28 @@
 
 {% block body %}
 <h1 class="text-center text-danger">THỐNG KÊ - BÁO CÁO</h1>
-<form method="POST" action="{{ url_for('nhapdiem') }}">
+<form method="POST" action="{{ url_for('statsview.index') }}">
     <div class="form-row">
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-3">
             <label for="schoolYear">Năm học</label>
             <select id="schoolYear" class="form-control" name="school_year_id">
                 <option value="">Chọn năm học</option>
                 {% for i in namhoc %}
+
                 <option value="{{ i.id }}">{{ i.name }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-3">
             <label for="semester">Học kỳ</label>
             <select id="semester" class="form-control" name="semester_id">
                 <option value="">Chọn học kỳ</option>
-                {% for i in hk %}
-                <option value="{{ i.id }}">{{ i.semester_type }}</option>
+                {% for i in hks %}
+                <option value="{{ i.id }}">{{ i.semester_type }} {{ i.schoolyear }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="form-group col-md-4">
+        <div class="form-group col-md-3">
             <label for="subject">Môn học</label>
             <select id="subject" class="form-control" name="subject_id">
                 <option value="">Chọn môn học</option>
@@ -31,30 +32,31 @@
                 {% endfor %}
             </select>
         </div>
+    <button type="submit" class="btn btn-primary col-md-1" name="view_thong_ke">Xem</button>
+
+
     </div>
-</form>
+    </form>
 <br>
 <div class="row">
     <div class="col-md-12 col-12">
 
         <table class="table">
             <tr>
-                <th>Id</th>
                 <th>Tên lớp</th>
                 <th>Sĩ số</th>
                 <th>Số lượng đạt</th>
                 <th>Tỷ lệ</th>
-
             </tr>
-            {% for s in lops %}
+            {% for s in class_performance %}
             <tr>
-                <td>{{ s[0] }}</td>
+                <td>{{ s[0] }}</td> <!-- Tên lớp -->
                 <td>{{ s[1] }}</td>
                 <td>{{ s[2] }}</td>
-                <td></td>
-                <td></td>
+                <td>{{ s[3] }}</td>
             </tr>
             {% endfor %}
+
         </table>
 
     </div>
@@ -63,27 +65,6 @@
     </div>
 </div>
 
-    <div class="col-md-5 col-12">
-
-        <table class="table">
-            <tr>
-
-                <th>Thời gian</th>
-                <th>Doanh thu</th>
-            </tr>
-            {% for s in stats2 %}
-            <tr>
-                <td>{{ s[0] }}</td>
-
-                <td>{{ s[1] }} VNĐ</td>
-            </tr>
-            {% endfor %}
-        </table>
-
-    </div>
-    <div class="col-md-7 col-12">
-        <canvas id="myChart2"></canvas>
-    </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -93,7 +74,7 @@
             data: {
               labels: labels,
               datasets: [{
-                label: '# Doanh thu',
+                label: 'Số lượng đạt',
                 data: data,
                 borderWidth: 1,
                 backgroundColor: ['red', 'green', 'blue', 'gold', 'brown', 'orange']
@@ -112,9 +93,9 @@
     let data = [];
     let labels = [];
 
-    {% for s in lops %}
+    {% for s in class_performance %}
     data.push({{ s[2] }});
-    labels.push('{{ s[1] }}')
+    labels.push('{{ s[0] }}')
     {% endfor %}
 
 

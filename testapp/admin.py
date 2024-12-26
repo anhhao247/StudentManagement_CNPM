@@ -1,5 +1,5 @@
 from tkinter.font import names
-
+from flask import request
 from testapp import app, db, dao
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 
@@ -8,7 +8,7 @@ from testapp.models import Khoi, Lop, Student, User, UserRole, Subject, Teacher,
 from flask_admin.contrib.sqla import ModelView
 import hashlib
 from flask_login import logout_user, current_user
-from flask import redirect, session
+from flask import redirect, session, jsonify
 from sqlalchemy import func
 
 class MyAdminIndexView(AdminIndexView):
@@ -122,9 +122,22 @@ class LogoutView(AuthendicatedBaseView):
         return redirect('/admin')
 
 class StatsView(AuthendicatedBaseView):
-    @expose("/")
+    @expose("/", methods=['GET', 'POST'])
     def index(self):
-        return self.render('admin/stats.html', lops=dao.count_student_by_class(), mh=dao.load_monhoc(), hk=dao.load_semester(), namhoc=dao.load_namhoc())
+        class_performance = ()
+        if request.method == 'POST':
+            # Lấy dữ liệu từ biểu mẫu
+            school_year_id = request.form.get('school_year_id')
+            semester_id = request.form.get('semester_id')
+            subject_id = request.form.get('subject_id')
+
+            # Gọi hàm tính toán hiệu suất
+            class_performance = dao.calculate_class_performance(semester_id, subject_id)
+
+            # Truyền dữ liệu vào template
+
+        return self.render('admin/stats.html', mh=dao.load_monhoc(), hks=dao.load_semester(), namhoc=dao.load_namhoc(), class_performance=class_performance)
+
 
 admin.add_view(KhoiView(Khoi, db.session, name='Khối'))
 admin.add_view(LopView(Lop, db.session, name='Lớp học'))
@@ -134,6 +147,6 @@ admin.add_view(TeacherView(Teacher, db.session, name='Giáo Viên'))
 admin.add_view(SubjectView(Subject, db.session, name='Môn học'))
 admin.add_view(SemesterView(Semester, db.session, name='Học kỳ'))
 admin.add_view(SchoolYearView(SchoolYear, db.session, name='Năm học'))
-admin.add_view(StatsView(name='Thống kê'))
+admin.add_view(StatsView(name='Thống kê', endpoint='statsview'))
 admin.add_view(LogoutView(name='Logout'))
 

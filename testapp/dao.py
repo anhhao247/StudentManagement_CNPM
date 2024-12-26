@@ -1,10 +1,42 @@
 from sqlalchemy import func, case
 from sqlalchemy.exc import NoResultFound
+from flask import jsonify
 
 from testapp.models import *
 
 def get_semester_by_schoolyear_id(schoolyear_id):
     return Semester.query.filter_by(school_year_id=schoolyear_id).all()
+
+
+def calculate_avg_for_subject(semester_id, class_id, subject_id):
+    """
+    Tính điểm trung bình của một môn học cho từng học sinh trong lớp cụ thể trong một học kỳ
+    """
+    # Lấy tất cả học sinh trong lớp đã chọn
+    students_in_class = Student.query.filter_by(class_id=class_id).all()
+    student_averages = {}
+
+    for student in students_in_class:
+        # Lấy điểm của học sinh cho môn học và học kỳ đã chọn
+        marks = Mark.query.filter_by(student_id=student.id, semester_id=semester_id, subject_id=subject_id).all()
+        subject_marks = {'15_phut': [], '45_phut': [], 'cuoi_ky': []}
+
+        for m in marks:
+            if m.type == DiemType.DIEM_15PHUT:
+                subject_marks['15_phut'].append(m.value)
+            elif m.type == DiemType.DIEM_45PHUT:
+                subject_marks['45_phut'].append(m.value)
+            elif m.type == DiemType.DIEM_CUOIKY:
+                subject_marks['cuoi_ky'].append(m.value)
+
+        # Tính điểm trung bình của môn học
+        avg = calculate_subject_avg(subject_marks)
+        student_averages[student.id] = {
+            'name': student.ho + " " + student.ten,
+            'average': round(avg, 1)
+        }
+
+    return student_averages
 
 def calculate_subject_avg(subject_marks):
     """
@@ -287,57 +319,133 @@ def get_semester_by_id(semester_id):
 #     return diem_tb
 
 # Corrected function
-def calculate_average_score(school_year_id, semester_id, subject_id):
-    # Adjusted `case()` to pass positional arguments
-    weight_case = case(
-        (Mark.type.name == "DIEM_15PHUT", 1),
-        (Mark.type.name == "DIEM_45PHUT", 2),
-        (Mark.type.name == "DIEM_CUOIKY", 3),
-        else_=0
-    )
 
-    # Tính tổng điểm có áp dụng hệ số và tổng hệ số
+def calculate_student_subject_average(semester_id, subject_id, student_id):
+    # Query to get all marks for the given student, subject, and semester
     results = db.session.query(
-        Student.id.label('student_id'),
-        Student.ho.label('last_name'),
-        Student.ten.label('first_name'),
-        func.sum(Mark.value * weight_case).label('total_score'),
-        func.sum(weight_case).label('total_weight')
-    ).join(Mark, Mark.student_id == Student.id
-    ).join(Semester, Mark.semester_id == Semester.id
-    ).join(SchoolYear, Semester.school_year_id == SchoolYear.id
+        Mark.type.label("mark_type"),
+        func.avg(Mark.value).label("average_mark")
     ).filter(
-        SchoolYear.id == school_year_id,
-        Semester.id == semester_id,
-        Mark.subject_id == subject_id
-    ).group_by(Student.id, Student.ho, Student.ten).all()
+        Mark.semester_id == semester_id,
+        Mark.subject_id == subject_id,
+        Mark.student_id == student_id
+    ).group_by(
+        Mark.type
+    ).all()
 
-    # Tính điểm trung bình
-    average_scores = [
-        {
-            'student_id': row.student_id,
-            'name': f"{row.last_name} {row.first_name}",
-            'average_score': round(row.total_score / row.total_weight, 2) if row.total_weight > 0 else None
-        }
-        for row in results
-    ]
-    return average_scores
+    # Define weight for each mark type
+    weight_map = {
+        DiemType.DIEM_15PHUT: 1,
+        DiemType.DIEM_45PHUT: 2,
+        DiemType.DIEM_CUOIKY: 3
+    }
 
-def test():
-    s = Student.query.get(1)
-    if s.lop:  # Nếu học sinh có lớp
-        # Lấy lớp của học sinh (nếu có nhiều lớp, chúng ta cần xử lý)
-        for lop in s.lop:  # Sử dụng mối quan hệ nhiều-nhiều
-            return lop.si_so
-    else:
-        return "Học sinh chưa có lớp"
+    total_weight = 0
+    total_weighted_score = 0
+
+    for row in results:
+        mark_type = row.mark_type
+        average_mark = row.average_mark
+        weight = weight_map.get(mark_type, 0)
+
+        total_weighted_score += average_mark * weight
+        total_weight += weight
+
+    # Calculate the final average
+    final_average = total_weighted_score / total_weight if total_weight > 0 else None
+
+    return final_average
+
+
+def get_students_by_class(lop_id):
+    # Query to get all students in the given class
+    results = db.session.query(Student).join(
+        lop_student, Student.id == lop_student.c.student_id
+    ).filter(
+        lop_student.c.lop_id == lop_id
+    ).all()
+
+    return results
+
+
+def calculate_passing_students(lop_id, semester_id, subject_id):
+    students = get_students_by_class(lop_id)
+    passing_students = []
+
+    for student in students:
+        average = calculate_student_subject_average(semester_id, subject_id, student.id)
+        if average is not None and average >= 5:
+            passing_students.append(student)
+
+    return passing_students
+
+
+def count_student_by_class():
+    return db.session.query(Lop.id, Lop.name, func.count(lop_student.c.student_id)).join(
+        lop_student, Lop.id == lop_student.c.lop_id, isouter=True
+    ).group_by(Lop.id).all()
+
+
+def calculate_class_statistics(semester_id, subject_id):
+    class_data = count_student_by_class()
+    statistics = []
+
+    for lop in class_data:
+        lop_id, lop_name, si_so = lop
+        passing_students = calculate_passing_students(lop_id, semester_id, subject_id)
+        so_luong_qua_mon = len(passing_students)
+        ti_le_qua_mon = (so_luong_qua_mon / si_so) * 100 if si_so > 0 else 0
+
+        # Append tuple instead of dictionary
+        statistics.append((lop_name, si_so, so_luong_qua_mon, ti_le_qua_mon))
+
+    return statistics
+
+
+def calculate_class_performance(semester_id, subject_id):
+    # Lấy danh sách tất cả các lớp học từ cơ sở dữ liệu
+    classes = db.session.query(Lop.id, Lop.name).all()
+
+    # Danh sách để lưu kết quả
+    results = []
+
+    # Duyệt qua từng lớp
+    for lop in classes:
+        lop_id = lop.id
+        lop_name = lop.name
+
+        # Tính sĩ số của lớp
+        si_so = db.session.query(func.count(lop_student.c.student_id)).filter(
+            lop_student.c.lop_id == lop_id
+        ).scalar()
+
+        # Tính số lượng học sinh đạt
+        passing_students = calculate_passing_students(lop_id, semester_id, subject_id)
+        so_luong_qua_mon = len(passing_students)
+
+        # Tính tỷ lệ đạt
+        ti_le_qua_mon = (so_luong_qua_mon / si_so) * 100 if si_so > 0 else 0
+
+        # Lưu kết quả dưới dạng tuple
+        results.append((lop_name, si_so, so_luong_qua_mon, ti_le_qua_mon))
+
+    return results
+
+
 
 if __name__ == "__main__":
     from testapp import app
 
     with app.app_context():
-        print(test())
-        # test()
+        kq = calculate_class_performance(1,1)
+
+        print(kq)
+        # for i in kq:
+        #     print(i[0])
+        #     print(i[1])
+        #     print(i[2])
+        #     print(i[3])
+
 # def get_user_by_id(user_id):
 #     # Lấy thông tin người dùng từ cơ sở dữ liệu dựa trên user_id
 #     user = User.query.get(user_id)  # Truy vấn cơ sở dữ liệu với user_id
