@@ -1,0 +1,69 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Xuat diem{% endblock %}
+
+
+{% block content %}
+<div class="content">
+    <h2 class="text-center mb-4">Bảng Điểm Môn Học</h2>
+
+    <!-- Form chọn năm học và lớp -->
+    <form method="POST" action="{{ url_for('xuatdiem') }}">
+        <div class="form-group">
+            <label for="schoolYear">Năm học:</label>
+            <select id="schoolYear" class="form-control" name="school_year_id" required>
+                <option value="">Chọn Năm Học</option>
+                {% for year in namhoc %}
+                <option value="{{ year.id }}" {% if year.id == selected_year_id %}selected{% endif %}>
+                    {{ year.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="class">Lớp:</label>
+            <select id="class" class="form-control" name="class_id" required>
+                <option value="">Chọn Lớp</option>
+                {% for lop in lops %}
+                <option value="{{ lop.id }}" {% if lop.id == selected_class_id %}selected{% endif %}>
+                    {{ lop.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Xem Bảng Điểm</button>
+    </form>
+
+    {% if students_in_lop %}
+    <h3 class="mt-4">Danh Sách Điểm Các Môn Học</h3>
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="thead-light">
+            <tr>
+                <th>STT</th>
+                <th>Họ Tên</th>
+                <th>Lớp</th>
+                <th>Trung Bình HK1</th>
+                <th>Trung Bình HK2</th>
+                <th>Trung Bình Tổng</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students_in_lop %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ student_marks[student.id].name }}</td>
+                <td>{{ student_marks[student.id].class }}</td>
+                <td>{{ student_marks[student.id].hk1_avg | round(1) }}</td>
+                <td>{{ student_marks[student.id].hk2_avg | round(1) }}</td>
+                <td>{{ student_marks[student.id].total_avg | round(1) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-center">Chưa có học sinh hoặc chưa có điểm cho lớp này.</p>
+    {% endif %}
+</div>
+{% endblock %}

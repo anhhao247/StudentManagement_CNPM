@@ -17,20 +17,21 @@ function searchTable() {
     }
 }
 
-// Lọc theo Khối lớp
 function filterByGrade() {
-    var gradeFilter = document.getElementById("filter-grade").value;
-    var rows = document.querySelectorAll("#class-table tbody tr");
+    var gradeFilter = document.getElementById("filter-grade").value; // Lấy giá trị từ dropdown
+    var rows = document.querySelectorAll("#class-table tbody tr"); // Lấy tất cả các dòng trong bảng
 
     rows.forEach(function(row) {
-        var grade = row.getAttribute("data-grade");
-        if (gradeFilter === "" || grade === gradeFilter) {
-            row.style.display = "";
+        var grade = row.getAttribute("data-grade"); // Lấy giá trị trong thuộc tính data-grade của mỗi dòng
+        if (gradeFilter === "" || grade === gradeFilter) { // Nếu bộ lọc trống hoặc khối lớp khớp
+            row.style.display = ""; // Hiển thị dòng
         } else {
-            row.style.display = "none";
+            row.style.display = "none"; // Ẩn dòng nếu khối lớp không khớp
         }
     });
 }
+
+
 function showStudentList(classId, className) {
     const classListContainer = document.getElementById("class-list-container");
     const studentListContainer = document.getElementById("student-list-container");

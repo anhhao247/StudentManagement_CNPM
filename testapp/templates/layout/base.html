@@ -40,10 +40,12 @@
         <a href="{{ url_for('view_student') }}">Học sinh</a>
         <a href="{{ url_for('view_monhoc') }}">Môn học</a>
         <a href="{{ url_for('nhapdiem') }}">Điểm</a>
+         <a href="{{ url_for('xuatdiem') }}">Xuất điểm</a>
         <a href="#">Thống kê</a>
-        <a href="#">Tài khoản</a>
+
         {% elif current_user.is_authenticated and current_user.user_role == UserRole.TEACHER %}
         <a href="{{ url_for('nhapdiem') }}">Điểm</a>
+        <a href="{{ url_for('xuatdiem') }}">Xuất điểm</a>
         {% elif current_user.is_authenticated and current_user.user_role == UserRole.STAFF %}
         <a href="{{ url_for('view_class') }}">Class</a>
         <a href="{{ url_for('view_student') }}">Học sinh</a>
@@ -66,8 +68,10 @@
     </div>
 </div>
 
-{% block content %} {% endblock %}
-
+<div class="content">
+                {% block header %} {% endblock %}
+        {% block content %} {% endblock %}
+    </div>
 
 </body>
 

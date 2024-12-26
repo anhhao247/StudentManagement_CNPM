@@ -244,6 +244,101 @@ def nhapdiem():
                            marks_by_student=marks_by_student,
                            student_marks=student_marks)
 
+#xuất điểm
+@app.route('/xuat-diem', methods=['GET', 'POST'])
+@login_required
+@admin_or_required(role=UserRole.TEACHER)
+def xuatdiem():
+    # Lấy thông tin các lớp và năm học
+    lops = Lop.query.all()
+    namhoc = SchoolYear.query.all()
+
+    selected_year_id = request.form.get('school_year_id')
+    selected_class_id = request.form.get('class_id')
+
+    students_in_lop = []
+    student_marks = {}
+
+    if selected_year_id and selected_class_id:
+        # Lấy học kỳ tương ứng với năm học đã chọn
+        semesters = Semester.query.filter_by(school_year_id=selected_year_id).all()
+        selected_class = Lop.query.filter_by(id=selected_class_id).first()
+        # In thông tin học kỳ và lớp
+        print(f"Học kỳ cho năm học {selected_year_id}: {semesters}")
+        print(f"Lớp đã chọn: {selected_class}")
+
+        if selected_class and semesters:
+            # Lấy học sinh trong lớp đã chọn
+            students_in_lop = selected_class.students
+
+            for student in students_in_lop:
+                student_marks[student.id] = {
+                    'name': student.ho + " " + student.ten,
+                    'class': selected_class.name,
+                    'hk1_avg': 0,
+                    'hk2_avg': 0,
+                    'total_avg': 0
+                }
+
+                # Tạo danh sách điểm cho từng học kỳ
+                hk1_subjects = {}
+                hk2_subjects = {}
+
+                for semester in semesters:
+                    print(f"Checking semester type for semester {semester.id}: {semester.semester_type}")
+                    marks = Mark.query.filter_by(student_id=student.id, semester_id=semester.id).all()
+                    print(f"Marks for student {student.ho} {student.ten} in semester {semester.id}: {marks}")
+
+                    # Lọc điểm theo từng loại điểm cho từng học kỳ và môn học
+                    for m in marks:
+                        subject = m.subject_id
+                        if semester.semester_type == 'Học kỳ 1':
+                            if subject not in hk1_subjects:
+                                hk1_subjects[subject] = {'15_phut': [], '45_phut': [], 'cuoi_ky': []}
+                            if m.type == DiemType.DIEM_15PHUT:
+                                hk1_subjects[subject]['15_phut'].append(m.value)
+                            elif m.type == DiemType.DIEM_45PHUT:
+                                hk1_subjects[subject]['45_phut'].append(m.value)
+                            elif m.type == DiemType.DIEM_CUOIKY:
+                                hk1_subjects[subject]['cuoi_ky'].append(m.value)
+                        elif semester.semester_type == 'Học kỳ 2':
+                            if subject not in hk2_subjects:
+                                hk2_subjects[subject] = {'15_phut': [], '45_phut': [], 'cuoi_ky': []}
+                            if m.type == DiemType.DIEM_15PHUT:
+                                hk2_subjects[subject]['15_phut'].append(m.value)
+                            elif m.type == DiemType.DIEM_45PHUT:
+                                hk2_subjects[subject]['45_phut'].append(m.value)
+                            elif m.type == DiemType.DIEM_CUOIKY:
+                                hk2_subjects[subject]['cuoi_ky'].append(m.value)
+
+                # Tính điểm trung bình theo từng môn học cho từng học kỳ
+                def calculate_subject_avg(subject_marks):
+                    weighted_avg = sum(subject_marks['15_phut']) * 1 + sum(subject_marks['45_phut']) * 2 + sum(subject_marks['cuoi_ky']) * 3
+                    total_weight = len(subject_marks['15_phut']) * 1 + len(subject_marks['45_phut']) * 2 + len(subject_marks['cuoi_ky']) * 3
+                    return weighted_avg / total_weight if total_weight > 0 else 0
+
+                hk1_avg_list = [calculate_subject_avg(marks) for subject, marks in hk1_subjects.items()]
+                hk2_avg_list = [calculate_subject_avg(marks) for subject, marks in hk2_subjects.items()]
+
+                hk1_avg = sum(hk1_avg_list) / len(hk1_avg_list) if hk1_avg_list else 0
+                hk2_avg = sum(hk2_avg_list) / len(hk2_avg_list) if hk2_avg_list else 0
+                total_avg = (hk2_avg * 2 + hk1_avg) / 3 if (hk1_avg_list or hk2_avg_list) else 0
+
+                # Cập nhật điểm trung bình cho học sinh
+                student_marks[student.id].update({
+                    'hk1_avg': hk1_avg,
+                    'hk2_avg': hk2_avg,
+                    'total_avg': total_avg
+                })
+
+    return render_template('xuatdiem.html',
+                           lops=lops,
+                           namhoc=namhoc,
+                           students_in_lop=students_in_lop,
+                           student_marks=student_marks,
+                           selected_year_id=selected_year_id,
+                           selected_class_id=selected_class_id)
+
 @app.route("/class")
 @login_required
 def view_class():
@@ -264,6 +359,7 @@ def get_students_by_lop(lop_id):
     if not lop:
         return jsonify({"error": "Lớp không tồn tại"}), 404
 
+    # Lấy danh sách học sinh của lớp thông qua relationship
     students = [{
         "id": s.id,
         "ho": s.ho,
@@ -275,12 +371,14 @@ def get_students_by_lop(lop_id):
 
     return jsonify({"students": students}), 200
 
+
 @app.route('/students/not-in-class', methods=['GET'])
 @login_required
 def get_students_not_in_class():
     try:
-        # Truy vấn học sinh không thuộc lớp nào
-        students = Student.query.filter(~Student.students.any()).all()
+        # Truy vấn học sinh không thuộc lớp nào (lọc qua bảng trung gian lop_student)
+        students = db.session.query(Student).outerjoin(lop_student).filter(lop_student.c.lop_id.is_(None)).all()
+
         student_list = [{
             "id": s.id,
             "ho": s.ho,
@@ -288,10 +386,12 @@ def get_students_not_in_class():
             "dob": s.DoB.strftime('%Y-%m-%d') if s.DoB else None,
             "sex": s.sex
         } for s in students]
+
         return jsonify({"students": student_list}), 200
     except Exception as e:
         logging.error(f"Error fetching students not in class: {e}", exc_info=True)
         return jsonify({"error": "Unable to fetch data"}), 500
+
 
 @app.route('/lop/add-students', methods=['POST'])
 @login_required
@@ -313,7 +413,6 @@ def add_students_to_class():
 
         # Thêm học sinh vào lớp (lop_student)
         for student_id in student_ids:
-            # Kiểm tra xem ID học sinh có hợp lệ hay không
             student = Student.query.get(student_id)
             if not student:
                 continue
@@ -323,8 +422,7 @@ def add_students_to_class():
                 lop_id=class_id, student_id=student_id).first()
             if not connection_exists:
                 # Thêm vào bảng trung gian lop_student
-                insert_stmt = lop_student.insert().values(lop_id=class_id, student_id=student_id)
-                db.session.execute(insert_stmt)
+                db.session.execute(lop_student.insert().values(lop_id=class_id, student_id=student_id))
 
         db.session.commit()
         return jsonify({"success": True}), 200
@@ -332,6 +430,7 @@ def add_students_to_class():
     except Exception as e:
         logging.error(f"Lỗi xảy ra: {str(e)}")
         return jsonify({"error": "Có lỗi xảy ra khi thêm học sinh"}), 500
+
 
 #Đếm số học sinh đang có
 @app.route('/class', methods=['GET'])
@@ -357,21 +456,19 @@ def get_student_count(lop_id):
 
 
 
+
 @app.route('/lop/<int:lop_id>/remove-student/<int:student_id>', methods=['DELETE'])
 @login_required
 def remove_student_from_class(lop_id, student_id):
     try:
-        # Kiểm tra xem lớp có tồn tại hay không
         lop = Lop.query.get(lop_id)
         if not lop:
             return jsonify({"error": "Lớp không tồn tại"}), 404
 
-        # Kiểm tra xem học sinh có trong lớp hay không
         student_in_class = db.session.query(lop_student).filter_by(lop_id=lop_id, student_id=student_id).first()
         if not student_in_class:
             return jsonify({"error": "Học sinh không thuộc lớp này"}), 404
 
-        # Xóa quan hệ trong bảng lop_student
         db.session.query(lop_student).filter_by(lop_id=lop_id, student_id=student_id).delete()
         db.session.commit()
 
