@@ -1,15 +1,23 @@
 from tkinter.font import names
 
-from testapp import app, db
-from flask_admin import Admin, BaseView, expose
+from testapp import app, db, dao
+from flask_admin import Admin, BaseView, expose, AdminIndexView
+
+from testapp.dao import load_monhoc
 from testapp.models import Khoi, Lop, Student, User, UserRole, Subject, Teacher, lop_student, Semester, SchoolYear
 from flask_admin.contrib.sqla import ModelView
 import hashlib
 from flask_login import logout_user, current_user
-from flask import redirect
+from flask import redirect, session
+from sqlalchemy import func
 
+class MyAdminIndexView(AdminIndexView):
+    @expose("/")
+    def index(self):
 
-admin = Admin(app=app, name='Student Management', template_mode='bootstrap4')
+        return self.render('admin/index.html', khois=dao.count_class_by_grade())
+
+admin = Admin(app=app, name='Student Management', template_mode='bootstrap4', index_view=MyAdminIndexView())
 
 class AuthenticatedView(ModelView):
     def is_accessible(self):
@@ -74,7 +82,10 @@ class LogoutView(AuthendicatedBaseView):
         logout_user()
         return redirect('/admin')
 
-
+class StatsView(AuthendicatedBaseView):
+    @expose("/")
+    def index(self):
+        return self.render('admin/stats.html', lops=dao.count_student_by_class(), mh=dao.load_monhoc(), hk=dao.load_semester(), namhoc=dao.load_namhoc())
 
 admin.add_view(KhoiView(Khoi, db.session, name='Khối'))
 admin.add_view(LopView(Lop, db.session, name='Lớp học'))
@@ -84,5 +95,5 @@ admin.add_view(TeacherView(Teacher, db.session, name='Giáo Viên'))
 admin.add_view(SubjectView(Subject, db.session, name='Môn học'))
 admin.add_view(SemesterView(Semester, db.session, name='Học kỳ'))
 admin.add_view(SchoolYearView(SchoolYear, db.session, name='Năm học'))
-
+admin.add_view(StatsView(name='Thống kê'))
 admin.add_view(LogoutView(name='Logout'))

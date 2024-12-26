@@ -5,7 +5,7 @@ from flask_login import login_user
 from testapp import app, dao, login
 from flask import request, render_template, session, redirect, url_for, flash,  logging, abort
 from flask_login import login_user, logout_user, login_required
-# from testapp.dao import get_user_by_id, xoa_hocsinh
+from testapp.dao import get_user_by_id, xoa_hocsinh
 from testapp.models import  User, lop_student, UserRole
 import pandas as pd
 from sqlalchemy.exc import IntegrityError
@@ -14,6 +14,7 @@ from flask import jsonify
 from testapp.admin import *
 from functools import wraps
 from testapp.models import *
+
 
 
 # Tạo Decorator kiểm tra đăng nhập
@@ -246,8 +247,8 @@ def nhapdiem():
 @app.route("/class")
 @login_required
 def view_class():
-    user_id = session['user_id']
-    user = get_user_by_id(user_id)  # Lấy thông tin người dùng từ cơ sở dữ liệu
+    # user_id =
+    # user = get_user_by_id(user_id)  # Lấy thông tin người dùng từ cơ sở dữ liệu
 
     # Lấy danh sách các khối
     grades = dao.load_grade()  # Đây là nơi bạn cần chắc chắn rằng có danh sách khối từ dao
@@ -255,7 +256,7 @@ def view_class():
     grade_id = request.args.get('grade_id')
     classes = dao.load_class(grade_id)
 
-    return render_template('class.html', classes=classes, grades=grades, user=user)
+    return render_template('class.html', grades=grades, classes=classes)
 
 @app.route("/lop/<int:lop_id>/students", methods=['GET'])
 @login_required
@@ -585,54 +586,54 @@ def view_diem():
 @app.route("/monhoc")
 @login_required
 def view_monhoc():
-    user_id = session['user_id']
-    user = get_user_by_id(user_id)  # Lấy thông tin người dùng từ cơ sở dữ liệu
+    # user_id = session['user_id']
+    # user = get_user_by_id(user_id)  # Lấy thông tin người dùng từ cơ sở dữ liệu
 
     monhocs = dao.load_monhoc()
-    return render_template('monhoc.html',monhocs=monhocs, user=user)
+    return render_template('monhoc.html',monhocs=monhocs)
 
 
 @app.route("/them_monhoc", methods=['POST'])
-@login_required
-def them_monhoc():
-
-
-    data = request.get_json()
-    name = data.get("name")
-
-    try:
-        if name:
-            dao.them_monhoc(name)  # Gọi hàm thêm môn học
-            return jsonify({"success": True}), 200
-        else:
-            return jsonify({"error": "Invalid input"}), 400
-    except ValueError as e:  # Bắt lỗi nếu môn học đã tồn tại
-        return jsonify({"error": str(e)}), 400
-
-
-
-@app.route("/sua_monhoc/<int:id>", methods=['PUT'])
-def sua_monhoc(id):
-    data = request.get_json()
-    name = data.get("name")
-
-    try:
-        if dao.sua_monhoc(id, name):
-            return jsonify({"success": True}), 200
-        else:
-            return jsonify({"error": "Not found"}), 404
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400  # Trả về lỗi nếu môn học đã tồn tại
-
-
-@app.route("/xoa_monhoc/<int:id>", methods=['DELETE'])
-def xoa_monhoc(id):
-    if dao.xoa_monhoc(id):
-        return jsonify({"success": True}), 200
-    else:
-        return jsonify({"error": "Not found"}), 404
-
-# monhoc
+# @login_required
+# def them_monhoc():
+#
+#
+#     data = request.get_json()
+#     name = data.get("name")
+#
+#     try:
+#         if name:
+#             dao.them_monhoc(name)  # Gọi hàm thêm môn học
+#             return jsonify({"success": True}), 200
+#         else:
+#             return jsonify({"error": "Invalid input"}), 400
+#     except ValueError as e:  # Bắt lỗi nếu môn học đã tồn tại
+#         return jsonify({"error": str(e)}), 400
+#
+#
+#
+# @app.route("/sua_monhoc/<int:id>", methods=['PUT'])
+# def sua_monhoc(id):
+#     data = request.get_json()
+#     name = data.get("name")
+#
+#     try:
+#         if dao.sua_monhoc(id, name):
+#             return jsonify({"success": True}), 200
+#         else:
+#             return jsonify({"error": "Not found"}), 404
+#     except ValueError as e:
+#         return jsonify({"error": str(e)}), 400  # Trả về lỗi nếu môn học đã tồn tại
+#
+#
+# @app.route("/xoa_monhoc/<int:id>", methods=['DELETE'])
+# def xoa_monhoc(id):
+#     if dao.xoa_monhoc(id):
+#         return jsonify({"success": True}), 200
+#     else:
+#         return jsonify({"error": "Not found"}), 404
+#
+# # monhoc
 
 
 

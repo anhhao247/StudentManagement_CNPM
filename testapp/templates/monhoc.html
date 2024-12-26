@@ -1,72 +1,83 @@
 {% extends 'layout/base.html' %}
 
 {% block title %}Môn học{% endblock %}
+{% block css %}
+<style>
+    .container {
+        width: 80%;
+    }
+</style>
 
-{% block header %}<h1 class="center-header">Danh sách môn học</h1>{% endblock %}
-
-{% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/table.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<div class="search-container">
-    <input type="text" id="search-input" class="custom-input" placeholder="Tìm kiếm môn học..." oninput="searchTable()">
-    <button onclick="showAddSubjectModal()" class="action-button">Thêm môn học</button>
-</div>
-<div class="table-wrapper">
-    <table class="fl-table" id="subject-table">
-    <thead>
-        <meta charset="UTF-8">
-      <tr>
-        <th>STT</th>
-        <th>Tên môn học</th>
-        <th>Thao tác</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for s in monhocs %}
-      <tr>
-          <td>{{ loop.index }}</td>  <!-- Thêm STT tự động -->
-        <td>{{ s.name }}</td>
-        <td>
-          <i class="fa fa-edit" onclick="editSubject('{{ s.id }}', '{{ s.name }}')"></i>
-          <i class="fa fa-trash" onclick="deleteSubject('{{ s.id }}')"></i>
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</div>
-<div id="no-results" style="display:none; text-align:center; color:red;">
-    Không tìm thấy kết quả phù hợp.
-</div>
+{% endblock %}
+{% block header %}<h1 class="center-header">Danh sách môn học</h1>{% endblock %}
 
-<!-- Hộp thoại thêm môn học -->
-<div id="add-subject-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeAddSubjectModal()">&times;</span>
-        <h3 class="modal-title">Thêm môn học mới</h3>
-        <div class="input-group">
-            <input type="text" id="new-subject-name" class="custom-input" placeholder="Nhập tên môn học...">
-        </div>
-        <button onclick="addSubject()" class="action-button">Thêm</button>
-        <div id="add-subject-error" style="color: red; display: none;"></div>
+
+{% block content %}
+<div class="container">
+    <div class="search-container">
+        <input type="text" id="search-input" class="custom-input" placeholder="Tìm kiếm môn học..."
+               oninput="searchTable()">
+        <button onclick="showAddSubjectModal()" class="action-button">Thêm môn học</button>
     </div>
-</div>
+    <div class="table-wrapper">
+        <table class="fl-table" id="subject-table">
+            <thead>
+            <meta charset="UTF-8">
+            <tr>
+                <th>STT</th>
+                <th>Tên môn học</th>
+                <th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for s in monhocs %}
+            <tr>
+                <td>{{ loop.index }}</td>  <!-- Thêm STT tự động -->
+                <td>{{ s.name }}</td>
+                <td>
+                    <i class="fa fa-edit" onclick="editSubject('{{ s.id }}', '{{ s.name }}')"></i>
+                    <i class="fa fa-trash" onclick="deleteSubject('{{ s.id }}')"></i>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="no-results" style="display:none; text-align:center; color:red;">
+        Không tìm thấy kết quả phù hợp.
+    </div>
 
-<!-- Hộp thoại sửa môn học -->
-<div id="edit-subject-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-button" onclick="closeEditSubjectModal()">&times;</span>
-        <h3 class="modal-title">Sửa môn học</h3>
-        <div class="input-group">
-            <input type="text" id="edit-subject-name" class="custom-input" placeholder="Nhập tên môn học...">
+    <!-- Hộp thoại thêm môn học -->
+    <div id="add-subject-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeAddSubjectModal()">&times;</span>
+            <h3 class="modal-title">Thêm môn học mới</h3>
+            <div class="input-group">
+                <input type="text" id="new-subject-name" class="custom-input" placeholder="Nhập tên môn học...">
+            </div>
+            <button onclick="addSubject()" class="action-button">Thêm</button>
+            <div id="add-subject-error" style="color: red; display: none;"></div>
         </div>
-        <button onclick="saveSubjectEdit()" class="action-button">Lưu</button>
-        <div id="edit-subject-error" style="color: red; display: none;"></div>
+    </div>
+
+    <!-- Hộp thoại sửa môn học -->
+    <div id="edit-subject-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeEditSubjectModal()">&times;</span>
+            <h3 class="modal-title">Sửa môn học</h3>
+            <div class="input-group">
+                <input type="text" id="edit-subject-name" class="custom-input" placeholder="Nhập tên môn học...">
+            </div>
+            <button onclick="saveSubjectEdit()" class="action-button">Lưu</button>
+            <div id="edit-subject-error" style="color: red; display: none;"></div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block js %}
-    <script src="{{ url_for('static', filename='js/monhoc.js') }}"></script>
+<script src="{{ url_for('static', filename='js/monhoc.js') }}"></script>
 
 {% endblock %}
