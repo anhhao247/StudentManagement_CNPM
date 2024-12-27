@@ -1,6 +1,6 @@
 from sqlalchemy import func, case
 from sqlalchemy.exc import NoResultFound
-from flask import jsonify
+from flask import jsonify, logging
 
 from testapp.models import *
 
@@ -188,10 +188,6 @@ def xoa_hocsinh(id):
 
 # add student
 def them_hoc_sinh(ho, ten, gioi_tinh, ngay_sinh, dia_chi, sdt, email):
-    # Kiểm tra email hợp lệ
-    email_regex = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
-
-    # Kiểm tra số điện thoại chỉ chứa số
     # Kiểm tra độ tuổi
     dob = datetime.strptime(ngay_sinh, '%Y-%m-%d')  # Chuyển ngày sinh từ chuỗi sang đối tượng datetime
     today = datetime.today()

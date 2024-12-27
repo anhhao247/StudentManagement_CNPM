@@ -134,7 +134,7 @@ function closeAddStudentModal() {
     document.getElementById('add-student-modal').style.display = 'none';
 }
 
-function addSelectedStudents() {
+ function addSelectedStudents() {
     const selectedStudents = []; // Lấy danh sách ID học sinh được chọn
     document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
         selectedStudents.push(checkbox.value);
@@ -159,7 +159,39 @@ function addSelectedStudents() {
     .then(data => {
         if (data.success) {
             Swal.fire('Thành công!', 'Học sinh đã được thêm vào lớp!', 'success');
-            location.reload();
+
+            // Đóng modal
+            closeAddStudentModal();
+
+            // Gọi lại API để cập nhật danh sách học sinh
+            fetch(`/lop/${classId}/students`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('student-table-body');
+                    tableBody.innerHTML = ""; // Xóa danh sách cũ
+
+                    // Hiển thị danh sách học sinh mới
+                    data.students.forEach((student, index) => {
+                        const row = `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${student.ho}</td>
+                                <td>${student.ten}</td>
+                                <td>${student.dob || 'N/A'}</td>
+                                <td>${student.sex}</td>
+                                <td>${student.address || 'N/A'}</td>
+                                <td>
+                                    <i class="fas fa-trash text-danger" onclick="deleteStudentFromClass(${classId}, ${student.id})" title="Xóa"></i>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error updating student list:', error);
+                    Swal.fire('Lỗi!', 'Không thể cập nhật danh sách học sinh.', 'error');
+                });
         } else {
             Swal.fire('Lỗi!', data.error || 'Không thể thêm học sinh.', 'error');
         }
@@ -187,9 +219,47 @@ function deleteStudentFromClass(classId, studentId) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    Swal.fire('Thành công!', 'Học sinh đã được xóa khỏi lớp.', 'success').then(() => {
-                        location.reload(); // Tải lại danh sách học sinh
-                    });
+                    Swal.fire('Thành công!', 'Học sinh đã được xóa khỏi lớp.', 'success');
+
+                    // Gọi lại API để tải danh sách học sinh mới
+                    fetch(`/lop/${classId}/students`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const tableBody = document.getElementById('student-table-body');
+                            tableBody.innerHTML = ""; // Xóa dữ liệu cũ
+
+                            if (data.students.length === 0) {
+                                tableBody.innerHTML = `
+                                    <tr>
+                                        <td colspan="7" class="text-center text-danger">
+                                            Không có học sinh trong lớp này.
+                                        </td>
+                                    </tr>
+                                `;
+                            } else {
+                                // Hiển thị danh sách học sinh mới
+                                data.students.forEach((student, index) => {
+                                    const row = `
+                                        <tr data-student-id="${student.id}">
+                                            <td>${index + 1}</td>
+                                            <td>${student.ho}</td>
+                                            <td>${student.ten}</td>
+                                            <td>${student.dob || 'N/A'}</td>
+                                            <td>${student.sex}</td>
+                                            <td>${student.address || 'N/A'}</td>
+                                            <td>
+                                                <i class="fas fa-trash text-danger" onclick="deleteStudentFromClass(${classId}, ${student.id})" title="Xóa"></i>
+                                            </td>
+                                        </tr>
+                                    `;
+                                    tableBody.innerHTML += row;
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error updating student list:', error);
+                            Swal.fire('Lỗi!', 'Không thể cập nhật danh sách học sinh.', 'error');
+                        });
                 } else {
                     Swal.fire('Lỗi!', data.error || 'Không thể xóa học sinh.', 'error');
                 }
