@@ -1,5 +1,5 @@
     // Hiển thị modal thêm học sinh
-    function showAddStudentModal() {
+      function showAddStudentModal() {
         Swal.fire({
             title: 'Thêm học sinh mới',
             html: `
@@ -160,37 +160,30 @@ function updateStudent(studentId, updatedData) {
     });
 }
 
-    function addStudent(studentData) {
+  function addStudent(studentData) {
     fetch('/them_students', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(studentData)
     })
     .then(response => {
-        // Chuyển đổi phản hồi thành JSON ngay cả khi HTTP status là lỗi
+        // Kiểm tra nếu response không phải JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Phản hồi từ server không phải JSON.');
+        }
         return response.json().then(data => {
             if (!response.ok) {
-                // Ném lỗi với thông báo từ server
-                throw new Error(data.error || 'Đã xảy ra lỗi không xác định');
+                throw new Error(data.error || 'Đã xảy ra lỗi không xác định.');
             }
             return data;
         });
     })
     .then(data => {
-        if (data.success) {
-            Swal.fire(
-                'Thành công!',
-                'Học sinh đã được thêm thành công!',
-                'success'
-            ).then(() => location.reload());
-        }
+        Swal.fire('Thành công!', 'Học sinh đã được thêm!', 'success');
     })
     .catch(error => {
-        Swal.fire(
-            'Lỗi!',
-            error.message || 'Không thể xử lý yêu cầu. Vui lòng thử lại.',
-            'error'
-        );
+        Swal.fire('Lỗi!', error.message || 'Không thể xử lý yêu cầu.', 'error');
         console.error('Error:', error);
     });
 }

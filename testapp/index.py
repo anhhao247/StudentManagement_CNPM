@@ -477,37 +477,34 @@ def get_students():
         "pages": students.pages
     })
 
-@app.route("/them_students", methods=['POST'])
+@app.route('/them_students', methods=['POST'])
 @login_required
 def them_student():
     try:
         data = request.get_json()
         ho = data.get("ho")
         ten = data.get("ten")
-        sex = data.get("gender")  # Đổi gioi_tinh thành sex
+        sex = data.get("gender")
         ngay_sinh = data.get("dob")
         dia_chi = data.get("address")
         sdt = data.get("phone")
         email = data.get("email")
 
-        if not (ho and ten and sex and ngay_sinh and dia_chi and sdt and email):
-            return jsonify({"error": "Thiếu thông tin bắt buộc"}), 400
-
+        # Thêm học sinh vào cơ sở dữ liệu
         dao.them_hoc_sinh(ho, ten, sex, ngay_sinh, dia_chi, sdt, email)
-        return jsonify({"success": True}), 200
 
+        return jsonify({"success": True, "message": "Học sinh đã được thêm thành công!"}), 200
 
     except ValueError as e:
-
-        logging.error(f"Validation error: {e}", exc_info=True)
-
+        # Trả về lỗi xác thực
         return jsonify({"error": str(e)}), 400
 
     except Exception as e:
+        # Xử lý các lỗi khác
+        return jsonify({"error": "Đã xảy ra lỗi không xác định. Vui lòng thử lại sau."}), 500
 
-        logging.error(f"Unexpected error: {e}", exc_info=True)
 
-        return jsonify({"error": "Có lỗi xảy ra"}), 500
+
 
 @app.route("/edit_student/<int:student_id>", methods=['PUT'])
 @login_required
